@@ -1,10 +1,17 @@
 var roles = {
-    harvester: require('role.harvester'),
+    harvester: require('role.harvester2'),
     builder: require('role.builder'),
-    upgrader: require('role.upgrader')
+    upgrader: require('role.upgrader'),
+    repairer: require('role.repairer')
 };
 
 var counts = {};
+var quotas = {
+    harvester: 1,
+    builder: 0,
+    upgrader: 1
+};
+var shouldSpawn = true;
 
 module.exports.loop = function ( ) {
     counts = {
@@ -12,6 +19,8 @@ module.exports.loop = function ( ) {
         builder: 0,
         upgrader: 0
     };
+    
+    var spawn = Game.spawns['Spawn1'];
     
     for (var name in Game.creeps) {
         var creep = Game.creeps[name];
@@ -25,6 +34,16 @@ module.exports.loop = function ( ) {
         } else if (creep.memory.role === 'upgrader') {
             roles.upgrader.run(creep);
             counts.upgrader++;
+        }
+    }
+    
+    if (!spawn.spawning && shouldSpawn) {
+        if (quotas.harvester > counts.harvester) {
+            roles.harvester.create(spawn);
+        } else if (quotas.builder > counts.builder) {
+            roles.builder.create(spawn);
+        } else if (quotas.upgrader > counts.upgrader) {
+            roles.upgrader.create(spawn);
         }
     }
 }
